@@ -1,0 +1,156 @@
+
+<?php include VIEWPATH.'templates/header.php'; ?>
+<style>
+  .help-block{color: red;}
+
+</style>
+
+<body class="hold-transition layout-top-nav layout-navbar-fixed" >
+  <div class="wrapper">
+
+    <!-- Navbar -->
+
+     <?php include VIEWPATH.'templates/navbar.php'; ?>
+    
+   
+
+    <!-- /.navbar -->
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+      <!-- Content Header (Page header) -->
+      <div class="content-header">
+        <div class="container" >
+          <div class="row mb-2">
+            <div class="col-sm-6">
+              <h5 class="m-0" ><?=$title?></h5>
+            </div><!-- /.col -->
+            <div class="col-sm-6">
+              <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="#">Customers</a></li>
+                <li class="breadcrumb-item active">Add/Liste</li>
+              </ol>
+            </div><!-- /.col -->
+          </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+      </div>
+      <!-- /.content-header -->
+
+      <!-- Main content -->
+
+      <div class="container">
+        <!-- <div class="row"> -->
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body" >
+                <div style="padding-top: 5px;" class="col-md-12">
+                  <?= $this->session->flashdata('message')?>
+                  <form method="post" action="<?=base_url()?>exit/Magasin_sales/register">
+                  <div class="col-md-12 row" style="background-color:lightgray;">
+
+                    <div class="col-md-3">
+                      <label> CUSTOMER NAME</label>
+                      <input type="text" class="form-control" required name="CUSTOMER">
+                    </div>
+                    <div class="col-md-3">
+                      <label> ADRESS</label>
+                      <input type="text" class="form-control" required name="ADRESS">
+                    </div>
+                    <div class="col-md-3">
+                      <label>TELEPHONE</label>
+                      <input type="text" class="form-control" name="TELEPHONE">
+                    </div>
+                    <div class="col-md-3" style="padding:30px">
+                      <input type="submit" class="btn btn-primary form-control" value="+ Register">
+                    </div>
+
+                  </div>
+                </form>
+                   <br>
+                  <table id='mytable' class="table table-bordered table-striped table-hover table-condensed" style="width: 100%;">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>CUSTOMER NAME</th>
+                        <th>ADRESS</th>
+                        <th>TELEPHONE</th>
+                        <th>OPTIONS</th>
+                      </tr>
+                    </thead>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+  <?php include VIEWPATH.'templates/footer.php'; ?>
+</body>
+
+
+    <script>
+      $(document).ready(function(){
+        $('#message').delay('slow').fadeOut(7000);
+        var row_count ="1000000";
+        table=$("#mytable").DataTable({
+          "processing":true,
+          "destroy" : true,
+          "serverSide":true,
+          "oreder":[[ 0, 'desc' ]],
+          "ajax":{
+            url:"<?=base_url()?>exit/Magasin_sales/liste/",
+            type:"POST"
+          },
+          lengthMenu: [[5,10,50, 100, row_count], [5,10,50, 100, "All"]],
+          pageLength: 5,
+          "columnDefs":[{
+            "targets":[],
+            "orderable":false
+          }],
+
+          dom: 'Bfrtlip',
+          buttons: [
+          'copy', 'csv', 'excel', 'pdf', 'print'
+          ],
+          language: {
+            "sProcessing":     "<?=lang('datatable_label_traitement')?>",
+            "sSearch":         "<?=lang('datatable_label_recherche')?>",
+            "sLengthMenu":     "<?=lang('datatable_label_affichage_1')?> _MENU_ <?=lang('datatable_label_affichage_2')?>",
+            "sInfo":           "<?=lang('datatable_label_affichage_start_start')?> _START_ <?=lang('datatable_label_affichage_start_end')?> _END_ <?=lang('datatable_label_affichage_sur')?> _TOTAL_ <?=lang('datatable_label_affichage_start_total')?>",
+            "sInfoEmpty":      "<?=lang('datatable_label_affichage_empty_start')?> 0 <?=lang('datatable_label_affichage_empty_end')?> 0 <?=lang('datatable_label_affichage_empty_sur')?> 0 <?=lang('datatable_label_affichage_empty_total')?>",
+            "sInfoFiltered":   "(<?=lang('datatable_label_filtrage_max')?> _MAX_ <?=lang('datatable_label_filtrage_total')?>)",
+            "sInfoPostFix":    "",
+            "sLoadingRecords": "<?=lang('datatable_label_chargement')?>",
+            "sZeroRecords":    "<?=lang('datatable_label_aucun')?>",
+            "sEmptyTable":     "<?=lang('datatable_label_tableau_disponible')?>",
+            "oPaginate": {
+              "sFirst":      "<?=lang('datatable_label_premier')?>",
+              "sPrevious":   "<?=lang('datatable_label_precedent')?>",
+              "sNext":       "<?=lang('datatable_label_suivant')?>",
+              "sLast":       "<?=lang('datatable_label_dernier')?>"
+            },
+            "oAria": {
+              "sSortAscending":  ": <?=lang('datatable_label_croissant')?>",
+              "sSortDescending": ": <?=lang('datatable_label_decroissant')?>"
+            }
+          }
+
+        });
+        $('input').change(function(){
+          $(this).parent().parent().removeClass('has-error');
+          $(this).next().empty();
+        });
+
+        $('select').change(function(){
+          $(this).parent().parent().removeClass('has-error');
+          $(this).next().empty();
+        });
+      });
+    </script>
+  </body>
+  </html>
+
+
+
+

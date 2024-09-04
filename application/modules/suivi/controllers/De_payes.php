@@ -1,0 +1,129 @@
+<?php 
+/**
+/**
+* @author nadvaxe2023
+
+*/
+ini_set('max_execution_time', '0');
+ini_set('memory_limit','-1');
+date_default_timezone_set("africa/Bujumbura");
+class De_payes extends CI_Controller
+{
+	function __construct()
+	{
+		parent::__construct();
+		$this->is_auth();
+	}
+
+	function is_auth()
+	{
+		if (empty($this->session->userdata('EMPLOYE_ID'))) {
+			redirect(base_url('index.php/'));
+		}
+	}
+
+	function index()
+	{
+		$data['page_title']="Gestionnaire des dettes";
+		$data['breadcrumbs'] = '<nav aria-label="breadcrumb">
+		<ol class="breadcrumb bg-light-lighten p-2 mb-0">
+		<li class="breadcrumb-item"><a href="#"><i class="uil-home-alt"></i> Accueil</a></li>
+		<li class="breadcrumb-item"><a href="#">Dettes et créances</a></li>
+		<li class="breadcrumb-item active" aria-current="page">Dettes</li>
+		</ol>
+		</nav>';
+		
+		$data['fournisseur']=$this->Model->getRequete('SELECT `ID_FOURNISSEUR`, `NOM_FOURNISSEUR`, `PRENOM_FOURNISSEUR`, `TEL_FOURNISSEUR`, `LOC_FOURNISSEUR`, `STATUT` FROM `fournisseurs_sanya` WHERE 1 ORDER BY NOM_FOURNISSEUR ASC');		
+		$this->load->view('De_payes_view',$data);
+	}
+
+	function ajouter()
+	{    
+		$DATE_DETTE=$this->input->post('DATE_DETTE');
+		$ID_FOURNISSEUR=$this->input->post('ID_FOURNISSEUR');
+		$DESIGNATION=$this->input->post('DESIGNATION');
+		$MONTANT=$this->input->post('MONTANT');
+		$STATUT=0;
+		$data=array('DATE_DETTE'=>trim($DATE_DETTE),'MONTANT'=>trim($MONTANT),'ID_FOURNISSEUR'=>trim($ID_FOURNISSEUR),'DESIGNATION'=>trim($DESIGNATION),'STATUT'=>trim($STATUT));
+		$this->Model->create('dettes_internes',$data);
+		echo json_encode(array('status'=>true));
+
+	}
+	function liste()
+	{
+		$var_search = !empty($_POST['search']['value']) ? $_POST['search']['value'] : null;
+
+		$query_principal="SELECT `ID_DETTE_INTERNE`,NOM_FOURNISSEUR,PRENOM_FOURNISSEUR, `DESIGNATION`, `MONTANT`, `DATE_DETTE`, dettes_internes.DATE_INSERTION, dettes_internes.STATUT FROM `dettes_internes` LEFT JOIN fournisseurs_sanya ON fournisseurs_sanya.ID_FOURNISSEUR=dettes_internes.ID_FOURNISSEUR WHERE dettes_internes.STATUT=1";
+
+		$order_column=array("DESIGNATION","MONTANT","DATE_DETTE","(CASE WHEN STATUT=1 THEN 'Non payé' ELSE 'Payé' END)","");
+
+		$order_by = isset($_POST['order']) ? ' ORDER BY '.$order_column[$_POST['order']['0']['column']] .'  '.$_POST['order']['0']['dir'] : 'ORDER  BY DESIGNATION  ASC';
+
+		$search = !empty($_POST['search']['value']) ? (" AND  (DESIGNATION LIKE '%$var_search%' OR PRENOM_FOURNISSEUR LIKE '%$var_search%' OR NOM_FOURNISSEUR LIKE '%$var_search%' OR MONTANT LIKE '%$var_search%' OR dettes_internes.STATUT LIKE '%$var_search%' OR DATE_DETTE LIKE '%$var_search%') ") : '';
+ 
+		$limit='LIMIT 0,10';
+		if($_POST['length'] != -1){
+			$limit='LIMIT '.$_POST["start"].','.$_POST["length"];
+		}
+
+
+		$critaire="";
+		$query_secondaire=$query_principal.' '.$critaire.' '.$search.' '.$order_by.'   '.$limit;
+		$query_filter = $query_principal.' '.$critaire.' '.$search;
+
+
+
+		$fetch_data = $this->Model->datatable($query_secondaire); 
+		$u=0; 
+		$data = array();
+
+		foreach ($fetch_data as $row) {
+
+			if ($row->STATUT==1) {
+				$STATUT='Payé';
+			}else{
+				$STATUT='Non Payé';
+			}
+			$sub_array = array();  
+
+// 			$sub_array[] = $row->DATE_DETTE;
+			$sub_array[] = date("d-m-Y H:i", strtotime($row->DATE_DETTE));
+			$sub_array[] = $row->DESIGNATION;
+			$sub_array[] = $row->MONTANT;
+			$sub_array[] = $row->NOM_FOURNISSEUR.' '.$row->PRENOM_FOURNISSEUR;
+			$sub_array[] = ($row->STATUT==1) ? '<span class="badge bg-success">'.$STATUT.'</span>' : '<span class="badge bg-danger">'.$STATUT.'</span>';
+			$data[] = $sub_array;
+		}
+
+		$output = array(
+			"draw" => intval($_POST['draw']),
+			"recordsTotal" =>$this->Model->all_data($query_principal),
+			"recordsFiltered" => $this->Model->filtrer($query_filter),
+			"data" => $data
+		);
+
+		echo json_encode($output);
+	}
+
+
+	function del($id,$stat)
+	{
+		$value = ($stat==1) ? 0 : 1 ;
+		$this->Model->update('dettes_internes',array('ID_DETTE_INTERNE'=>$id),array('STATUT'=>$value));
+		echo json_encode(array('status'=>true));
+	}
+	
+	function getOne($id)
+	{
+		$data=$this->Model->getRequeteOne('SELECT * FROM `dettes_internes` WHERE ID_DETTE_INTERNE='.$id);
+		echo json_encode($data);
+	}
+	// function update()
+	// {
+	// 	$DESCRIPTION_BRANCH=$this->input->post('DESCRIPTION_BRANCH');
+	// 	$LOCALISATION=$this->input->post('LOCALISATION');
+	// 	$this->Model->update('sanya_branches',array('ID_BRANCHE'=>$this->input->post('ID_BRANCHE')),array('DESCRIPTION_BRANCH'=>$DESCRIPTION_BRANCH,'LOCALISATION'=>$LOCALISATION));
+	// 	echo json_encode(array('status'=>true));
+	// }
+}
+?>
